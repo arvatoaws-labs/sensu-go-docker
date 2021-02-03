@@ -29,17 +29,23 @@ RUN go build \
     -X 'github.com/sensu/sensu-go/version.BuildSHA=$(git rev-parse HEAD)'" \
     -o bin/sensuctl ./cmd/sensuctl
 
+# FROM sensu/sensu:6.2.4 as official
+
 FROM alpine:latest
 
-COPY --from=builder /build/sensu-go/bin/sensu-agent /usr/local/bin/sensu-agent
-COPY --from=builder /build/sensu-go/bin/sensu-backend /usr/local/bin/sensu-backend
-COPY --from=builder /build/sensu-go/bin/sensuctl /usr/local/bin/sensuctl
+RUN mkdir -p /opt/sensu/bin
 
-RUN mkdir -p /opt/sensu && ln -s /usr/local/bin /opt/sensu/bin
+ADD entrypoint.sh /opt/sensu/bin
+COPY --from=builder /build/sensu-go/bin/sensu-agent /opt/sensu/bin/sensu-agent
+# COPY --from=official /opt/sensu/bin/sensu-backend /opt/sensu/bin/sensu-backend
+COPY --from=builder /build/sensu-go/bin/sensu-backend /opt/sensu/bin/sensu-backend
+COPY --from=builder /build/sensu-go/bin/sensuctl /opt/sensu/bin/sensuctl
 
-RUN apk add --no-cache \
-    ca-certificates \
-    dumb-init
+RUN apk add --no-cache ca-certificates dumb-init
+
+RUN ln -s /opt/sensu/bin/entrypoint.sh /usr/local/bin/sensu-agent
+RUN ln -s /opt/sensu/bin/entrypoint.sh /usr/local/bin/sensu-backend
+RUN ln -s /opt/sensu/bin/sensuctl /usr/local/bin/sensuctl
 
 WORKDIR /
 VOLUME /var/lib/sensu
