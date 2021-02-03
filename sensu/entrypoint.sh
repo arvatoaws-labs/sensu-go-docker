@@ -32,8 +32,6 @@ elif [ $called = "sensu-backend" ]; then
     export SENSU_BACKEND_ETCD_LISTEN_CLIENT_URLS
     export SENSU_BACKEND_ETCD_LISTEN_PEER_URLS
 
-    NODE_ENV=production PORT=5000 API_URL=http://127.0.0.1:8080 yarn node scripts serve &
-
     # wait for etcd to become available
     # TODO(JK): move this logic into the backend init logic so we don't need to
     # determine which host & port to check in this script.
