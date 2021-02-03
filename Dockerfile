@@ -35,6 +35,8 @@ COPY --from=builder /build/sensu-go/bin/sensu-agent /usr/local/bin/sensu-agent
 COPY --from=builder /build/sensu-go/bin/sensu-backend /usr/local/bin/sensu-backend
 COPY --from=builder /build/sensu-go/bin/sensuctl /usr/local/bin/sensuctl
 
+RUN mkdir -p /opt/sensu && ln -s /usr/local/bin /opt/sensu/bin
+
 RUN apk add --no-cache \
     ca-certificates \
     dumb-init
