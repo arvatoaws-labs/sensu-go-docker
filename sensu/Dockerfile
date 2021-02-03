@@ -1,6 +1,7 @@
 FROM golang:1.13 AS builder
 
 ARG SENSU_VERSION
+ARG SENSU_SNS_VERSION
 ENV GOOS "linux"
 ENV GOARCH "amd64"
 ENV CGO_ENABLED "0"
@@ -29,6 +30,12 @@ RUN go build \
     -X 'github.com/sensu/sensu-go/version.BuildSHA=$(git rev-parse HEAD)'" \
     -o bin/sensuctl ./cmd/sensuctl
 
+RUN go build \
+    -ldflags "-X 'github.com/sensu/sensu-aws-sns-handler/version.Version=${SENSU_SNS_VERSION}' \
+    -X 'github.com/sensu/sensu-aws-sns-handler/version.BuildDate=$(date +%Y-%m-%d)' \
+    -X 'github.com/sensu/sensu-aws-sns-handler/version.BuildSHA=$(git rev-parse HEAD)'" \
+    -o bin/sensuctl ./cmd/sensu-aws-sns-handler
+
 # FROM sensu/sensu:6.2.4 as official
 
 FROM alpine:latest
@@ -40,6 +47,7 @@ COPY --from=builder /build/sensu-go/bin/sensu-agent /opt/sensu/bin/sensu-agent
 # COPY --from=official /opt/sensu/bin/sensu-backend /opt/sensu/bin/sensu-backend
 COPY --from=builder /build/sensu-go/bin/sensu-backend /opt/sensu/bin/sensu-backend
 COPY --from=builder /build/sensu-go/bin/sensuctl /opt/sensu/bin/sensuctl
+COPY --from=builder /build/sensu-go/bin/sensu-aws-sns-handler /opt/sensu/bin/sensu-aws-sns-handler
 
 RUN apk add --no-cache ca-certificates dumb-init
 
