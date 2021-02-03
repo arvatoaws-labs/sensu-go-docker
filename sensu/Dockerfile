@@ -51,7 +51,7 @@ COPY --from=builder /build/sensu-go/bin/sensu-agent /opt/sensu/bin/sensu-agent
 # COPY --from=official /opt/sensu/bin/sensu-backend /opt/sensu/bin/sensu-backend
 COPY --from=builder /build/sensu-go/bin/sensu-backend /opt/sensu/bin/sensu-backend
 COPY --from=builder /build/sensu-go/bin/sensuctl /opt/sensu/bin/sensuctl
-COPY --from=builder /build/sensu-go/sensu-aws-sns-handler /opt/sensu/bin/sensu-aws-sns-handler
+COPY --from=builder /build/sensu-aws-sns-handler/sensu-aws-sns-handler /opt/sensu/bin/sensu-aws-sns-handler
 
 RUN apk add --no-cache ca-certificates dumb-init
 
