@@ -9,6 +9,8 @@ ENV CGO_ENABLED "0"
 WORKDIR /build
 RUN git clone --depth=1 --single-branch --branch v${SENSU_VERSION} https://github.com/sensu/sensu-go.git
 
+RUN git clone --depth=1 --single-branch --branch ${SENSU_SNS_VERSION} https://github.com/sensu/sensu-aws-sns-handler.git
+
 WORKDIR /build/sensu-go
 RUN go mod tidy
 
@@ -30,11 +32,13 @@ RUN go build \
     -X 'github.com/sensu/sensu-go/version.BuildSHA=$(git rev-parse HEAD)'" \
     -o bin/sensuctl ./cmd/sensuctl
 
+WORKDIR /build/sensu-aws-sns-handler
+RUN go mod tidy
+
 RUN go build \
     -ldflags "-X 'github.com/sensu/sensu-aws-sns-handler/version.Version=${SENSU_SNS_VERSION}' \
     -X 'github.com/sensu/sensu-aws-sns-handler/version.BuildDate=$(date +%Y-%m-%d)' \
-    -X 'github.com/sensu/sensu-aws-sns-handler/version.BuildSHA=$(git rev-parse HEAD)'" \
-    -o bin/sensuctl ./cmd/sensu-aws-sns-handler
+    -X 'github.com/sensu/sensu-aws-sns-handler/version.BuildSHA=$(git rev-parse HEAD)'"
 
 # FROM sensu/sensu:6.2.4 as official
 
@@ -47,7 +51,7 @@ COPY --from=builder /build/sensu-go/bin/sensu-agent /opt/sensu/bin/sensu-agent
 # COPY --from=official /opt/sensu/bin/sensu-backend /opt/sensu/bin/sensu-backend
 COPY --from=builder /build/sensu-go/bin/sensu-backend /opt/sensu/bin/sensu-backend
 COPY --from=builder /build/sensu-go/bin/sensuctl /opt/sensu/bin/sensuctl
-COPY --from=builder /build/sensu-go/bin/sensu-aws-sns-handler /opt/sensu/bin/sensu-aws-sns-handler
+COPY --from=builder /build/sensu-go/sensu-aws-sns-handler /opt/sensu/bin/sensu-aws-sns-handler
 
 RUN apk add --no-cache ca-certificates dumb-init
 
